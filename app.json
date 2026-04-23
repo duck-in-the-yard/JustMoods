@@ -1,0 +1,58 @@
+{
+  "expo": {
+    "name": "JustMoods",
+    "slug": "JustMoods",
+    "version": "1.0.7",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#36c15c"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.duck-in-the-yard.JustMoods"
+    },
+    "android": {
+      "statusBar": {
+        "translucent": true,
+        "backgroundColor": "#00000000"
+      },
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.duck-in-the-yard.JustMoods",
+      "versionCode": 2
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#36c15c"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9e6e6b4a-b43c-49e2-aeb5-aab2094edcfe"
+      }
+    }
+  }
+}
