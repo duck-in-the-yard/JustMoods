@@ -26,7 +26,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.duck-in-the-yard.JustMoods",
+      "package": "com.duckintheyard.justmoods",
       "versionCode": 2
     },
     "web": {
