@@ -1,3 +1,7 @@
+<p align="center">
+<img width="200" height="200" alt="icon" src="https://github.com/user-attachments/assets/b319a657-8ed5-4068-a992-b9cd9249ad1c" />
+</p>
+<br>
 🟢 JustMoods is a minimalistic android app, to record, track and view your everyday mood. It gives you three daily tasks that help with keeping a healthy lifestyle 🟢
   
 📋 CHECK DAILY TASKS  
