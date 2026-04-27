@@ -31,8 +31,8 @@
     - Sleep Tracker  
   
 ⚒️ UPCOMING PATCHES  
-    - Notification language will be changed to english only
-    - Bug that notification gets triggered even when mood is already tracked
+    - Notification language will be changed to english only  
+    - Bug that notification gets triggered even when mood is already tracked  
 
   
 ⚒️ Current version 1.0.7
