@@ -4,20 +4,19 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { StatusBar } from 'expo-status-bar'; 
+import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-import AsyncStorage from '@react-native-async-storage/async-storage'; 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { CalendarProvider } from '@/context/CalendarContext';
 import { AppThemeProvider, useAppTheme } from '@/context/ThemeContext';
-import { NotificationService } from '@/services/NotificationService'; 
+import { NotificationService } from '@/services/NotificationService';
 
-// Hilfsfunktion: Erzeugt YYYY-MM-DD
 const getTodayISO = () => {
   const d = new Date();
   const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 };
 
@@ -42,33 +41,31 @@ export default function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-      
-      const setupNotifications = async () => {
-        const hasPermission = await NotificationService.requestPermissions();
-        if (hasPermission) {
-          try {
-            // Check gegen den Speicher
-            const savedMoods = await AsyncStorage.getItem('@calendar_moods');
-            const today = getTodayISO();
-            
-            // Wenn heute noch kein Mood existiert
-            if (!savedMoods || !savedMoods.includes(today)) {
-              await NotificationService.scheduleDailyReminder();
-            } else {
-              // Wenn schon geloggt, alle Alarme aus
-              await NotificationService.cancelAll();
-              console.log("Check: Heute bereits geloggt. Kein Alarm nötig.");
-            }
-          } catch (e) {
-            await NotificationService.scheduleDailyReminder();
-          }
+    if (!loaded) return;
+
+    SplashScreen.hideAsync();
+
+    const setupNotifications = async () => {
+      try {
+        const savedMoods = await AsyncStorage.getItem('@calendar_moods');
+        const today = getTodayISO();
+
+        const hasTrackedToday = !!savedMoods && savedMoods.includes(today);
+
+        await NotificationService.scheduleMoodReminder(hasTrackedToday);
+
+        if (hasTrackedToday) {
+          console.log('Check: Heute bereits geloggt. Reminder auf morgen geplant.');
+        } else {
+          console.log('Check: Heute noch nicht geloggt. Reminder für nächste 18:00 geplant.');
         }
-      };
-      
-      setupNotifications();
-    }
+      } catch (e) {
+        console.log('Notification setup error:', e);
+        await NotificationService.scheduleMoodReminder(false);
+      }
+    };
+
+    setupNotifications();
   }, [loaded]);
 
   if (!loaded) {
@@ -87,8 +84,8 @@ function ThemeBridge() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} /> 
-      
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+
       <CalendarProvider>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />

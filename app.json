@@ -18,6 +18,9 @@
       "bundleIdentifier": "com.duck-in-the-yard.JustMoods"
     },
     "android": {
+      "permissions": [
+        "android.permission.SCHEDULE_EXACT_ALARM"
+      ],
       "statusBar": {
         "translucent": true,
         "backgroundColor": "#00000000"
