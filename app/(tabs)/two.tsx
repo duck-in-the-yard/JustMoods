@@ -6,6 +6,7 @@ import Colors from "@/constants/Colors";
 import { useCalendar, DotColor } from "@/context/CalendarContext";
 import { useRouter } from "expo-router";
 import { useAppTheme } from "@/context/ThemeContext";
+import { NotificationService } from "@/services/NotificationService"; 
 
 const fmtISO = (d: Date) => {
   const y = d.getFullYear();
@@ -25,23 +26,19 @@ const labelToDot: Record<string, DotColor> = {
 export default function TabTwoScreen() {
   const { colorScheme } = useAppTheme();
   const C = Colors[colorScheme];
-
   const { addEntry } = useCalendar();
   const router = useRouter();
 
-  const options = useMemo(
-    () => [
-      { label: "great",    color: "#00b4d8" },
-      { label: "nice",     color: "#7bd23c" },
-      { label: "okay",     color: "#f1c40f" },
-      { label: "bad",      color: "#e67e22" },
-      { label: "very bad", color: "#e74c3c" },
-    ],
-    []
-  );
+  const options = useMemo(() => [
+    { label: "great",    color: "#00b4d8" },
+    { label: "nice",     color: "#7bd23c" },
+    { label: "okay",     color: "#f1c40f" },
+    { label: "bad",      color: "#e67e22" },
+    { label: "very bad", color: "#e74c3c" },
+  ], []);
 
   const [open, setOpen] = useState(false);
-  const panel = useRef(new Animated.Value(1)).current; // 1 = hidden, 0 = visible
+  const panel = useRef(new Animated.Value(1)).current;
   const itemVals = useRef(options.map(() => new Animated.Value(0))).current;
 
   const appearStagger = useCallback(() => {
@@ -51,23 +48,20 @@ export default function TabTwoScreen() {
     Animated.stagger(70, seq).start();
   }, [itemVals]);
 
-  const disappearStaggerThenSlide = useCallback(
-    (after?: () => void) => {
-      const seq = itemVals.map((v) =>
-        Animated.timing(v, { toValue: 0, duration: 160, easing: Easing.in(Easing.cubic), useNativeDriver: true })
-      );
-      Animated.stagger(60, seq).start(() => {
-        Animated.timing(panel, { toValue: 1, duration: 260, easing: Easing.in(Easing.cubic), useNativeDriver: true })
-          .start(() => { setOpen(false); after?.(); });
-      });
-    }, [itemVals, panel]
-  );
+  const disappearStaggerThenSlide = useCallback((after?: () => void) => {
+    const seq = itemVals.map((v) =>
+      Animated.timing(v, { toValue: 0, duration: 160, easing: Easing.in(Easing.cubic), useNativeDriver: true })
+    );
+    Animated.stagger(60, seq).start(() => {
+      Animated.timing(panel, { toValue: 1, duration: 260, easing: Easing.in(Easing.cubic), useNativeDriver: true })
+        .start(() => { setOpen(false); after?.(); });
+    });
+  }, [itemVals, panel]);
 
   const openMenu = useCallback(() => {
     itemVals.forEach((v) => v.setValue(0));
     setOpen(true);
-    Animated.timing(panel, { toValue: 0, duration: 340, easing: Easing.out(Easing.cubic), useNativeDriver: true })
-      .start(appearStagger);
+    Animated.timing(panel, { toValue: 0, duration: 340, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start(appearStagger);
   }, [panel, appearStagger, itemVals]);
 
   const closeMenu = useCallback(() => disappearStaggerThenSlide(), [disappearStaggerThenSlide]);
@@ -77,19 +71,22 @@ export default function TabTwoScreen() {
   const translateY = panel.interpolate({ inputRange: [0, 1], outputRange: [0, 340] });
 
   const onPick = (label: string) => {
-    disappearStaggerThenSlide(() => {
+    disappearStaggerThenSlide(async () => {
       const date = fmtISO(new Date());
       const color = labelToDot[label] ?? "gray";
+      
       addEntry(date, color);
+      // Den Reminder sofort löschen
+      await NotificationService.cancelForToday();
+      
       router.push("/");
     });
   };
 
-  // Pill palette
-  const pillBg       = colorScheme === "dark" ? "#171717" : "#f5f5f5";
-  const pillPressed  = colorScheme === "dark" ? "#1d1d1d" : "#ececec";
-  const pillBorder   = colorScheme === "dark" ? "#2a2a2a" : "#e3e3e3";
-  const dotBorder    = colorScheme === "dark" ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.25)";
+  const pillBg = colorScheme === "dark" ? "#171717" : "#f5f5f5";
+  const pillPressed = colorScheme === "dark" ? "#1d1d1d" : "#ececec";
+  const pillBorder = colorScheme === "dark" ? "#2a2a2a" : "#e3e3e3";
+  const dotBorder = colorScheme === "dark" ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.25)";
 
   return (
     <View style={[styles.container, { backgroundColor: C.pagebackground }]}>

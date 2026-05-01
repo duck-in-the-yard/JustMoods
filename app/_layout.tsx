@@ -1,4 +1,3 @@
-// app/_layout.tsx
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
@@ -7,12 +6,20 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar'; 
 import 'react-native-reanimated';
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
 
-// Deine Provider
 import { CalendarProvider } from '@/context/CalendarContext';
 import { AppThemeProvider, useAppTheme } from '@/context/ThemeContext';
-// Notification Service Import
 import { NotificationService } from '@/services/NotificationService'; 
+
+// Hilfsfunktion: Erzeugt YYYY-MM-DD
+const getTodayISO = () => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 
 export {
   ErrorBoundary,
@@ -38,11 +45,25 @@ export default function RootLayout() {
     if (loaded) {
       SplashScreen.hideAsync();
       
-      // Benachrichtigungen initialisieren
       const setupNotifications = async () => {
         const hasPermission = await NotificationService.requestPermissions();
         if (hasPermission) {
-          await NotificationService.scheduleDailyReminder();
+          try {
+            // Check gegen den Speicher
+            const savedMoods = await AsyncStorage.getItem('@calendar_moods');
+            const today = getTodayISO();
+            
+            // Wenn heute noch kein Mood existiert
+            if (!savedMoods || !savedMoods.includes(today)) {
+              await NotificationService.scheduleDailyReminder();
+            } else {
+              // Wenn schon geloggt, alle Alarme aus
+              await NotificationService.cancelAll();
+              console.log("Check: Heute bereits geloggt. Kein Alarm nötig.");
+            }
+          } catch (e) {
+            await NotificationService.scheduleDailyReminder();
+          }
         }
       };
       
@@ -62,14 +83,10 @@ export default function RootLayout() {
 }
 
 function ThemeBridge() {
-  const { colorScheme } = useAppTheme(); // "light" | "dark"
+  const { colorScheme } = useAppTheme();
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      {/* Erzwingt den Kontrast: 
-          Dunkles Theme -> helle Icons (light)
-          Helles Theme -> dunkle Icons (dark) 
-      */}
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} /> 
       
       <CalendarProvider>

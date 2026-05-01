@@ -1,20 +1,19 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 
-// 1. Der Handler: Jetzt mit allen Feldern, die TypeScript verlangt
+// Konfiguration: Wie reagiert die App, wenn sie offen ist?
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
-    // Diese beiden fehlten und haben den Fehler verursacht:
     shouldShowBanner: true,
     shouldShowList: true,
   }),
 });
 
 export const NotificationService = {
-  // 2. Berechtigungen anfragen
+  // 1. Berechtigungen anfragen
   requestPermissions: async () => {
     if (!Device.isDevice) {
       console.log('Notifications funktionieren nur auf echten Geräten.');
@@ -32,11 +31,11 @@ export const NotificationService = {
     return finalStatus === 'granted';
   },
 
-  // 3. Täglich um 18:00 Uhr planen
+  // 2. Täglich um 18:00 Uhr planen
   scheduleDailyReminder: async () => {
+    // Zuerst alle alten löschen
     await Notifications.cancelAllScheduledNotificationsAsync();
 
-    // Stabiler Trigger für tägliche Reminders
     await Notifications.scheduleNotificationAsync({
       content: {
         title: "How was your day? 🌿",
@@ -49,11 +48,16 @@ export const NotificationService = {
         minute: 0,
       },
     });
-
     console.log("Reminder für 18:00 Uhr geplant.");
   },
 
-  // 4. Alles löschen
+  // 3. Nur löschen (für heute erledigt)
+  cancelForToday: async () => {
+    await Notifications.cancelAllScheduledNotificationsAsync();
+    console.log("Reminder für heute deaktiviert.");
+  },
+
+  // Alles löschen
   cancelAll: async () => {
     await Notifications.cancelAllScheduledNotificationsAsync();
   }
