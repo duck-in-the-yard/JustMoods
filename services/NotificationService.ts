@@ -39,8 +39,8 @@ export const NotificationService = {
     // Stabiler Trigger für tägliche Reminders
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: "Wie war dein Tag? 🌿",
-        body: "Vergiss nicht, deine Stimmung für heute festzuhalten.",
+        title: "How was your day? 🌿",
+        body: "Don't forget to log your mood for today.",
         sound: true,
       },
       trigger: {
