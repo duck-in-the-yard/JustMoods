@@ -6,7 +6,7 @@ import Colors from "@/constants/Colors";
 import { useCalendar, DotColor } from "@/context/CalendarContext";
 import { useRouter } from "expo-router";
 import { useAppTheme } from "@/context/ThemeContext";
-import { NotificationService } from "@/services/NotificationService"; 
+import { NotificationService } from "@/services/NotificationService";
 
 const fmtISO = (d: Date) => {
   const y = d.getFullYear();
@@ -74,11 +74,14 @@ export default function TabTwoScreen() {
     disappearStaggerThenSlide(async () => {
       const date = fmtISO(new Date());
       const color = labelToDot[label] ?? "gray";
-      
+
       addEntry(date, color);
-      // Den Reminder sofort löschen
-      await NotificationService.cancelForToday();
-      
+
+      // Heute wurde getrackt:
+      // Falls die 18:00 Notification für heute noch offen war, wird sie ersetzt
+      // und direkt auf morgen 18:00 geplant.
+      await NotificationService.rescheduleAfterMoodTracked();
+
       router.push("/");
     });
   };
