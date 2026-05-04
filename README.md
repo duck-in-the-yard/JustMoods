@@ -29,6 +29,7 @@
     - Edit tasks and create your own  
     - Mood Average statistic  
     - Sleep Tracker  
+    - Customizable color theme  
   
 ⚒️ UPCOMING PATCHES  
   
