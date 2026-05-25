@@ -26,7 +26,7 @@ const WAKEUPS_LEVELS = [
   { label: "1", value: 4 },
   { label: "2", value: 3 },
   { label: "3", value: 2 },
-  { label: "4", value: 1 },
+  { label: "4+", value: 1 },
 ];
 
 // Purple gradient for hours — darkest at bottom (5-), lightest at top (9+)
