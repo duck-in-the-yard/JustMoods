@@ -5,19 +5,26 @@ import {
   TouchableOpacity,
   PanResponder,
   Dimensions,
+  Alert,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "@/components/Themed";
 import Colors from "@/constants/Colors";
 import { useAppTheme } from "@/context/ThemeContext";
+import { NotificationService } from "@/services/NotificationService";
+
+// ─── Storage ──────────────────────────────────────────────────────────────────
+
+const SLEEP_STORAGE_KEY = "@sleep_entries_v1";
 
 // ─── Scale definitions ────────────────────────────────────────────────────────
 
 const HOURS_LEVELS = [
   { label: "9+", value: 5 },
-  { label: "8",  value: 4 },
-  { label: "7",  value: 3 },
-  { label: "6",  value: 2 },
+  { label: "8", value: 4 },
+  { label: "7", value: 3 },
+  { label: "6", value: 2 },
   { label: "5-", value: 1 },
 ];
 
@@ -31,23 +38,32 @@ const WAKEUPS_LEVELS = [
 
 // Purple gradient for hours — darkest at bottom (5-), lightest at top (9+)
 const HOURS_COLORS = [
-  "#480CA8", // 5- (bottom, darkest)
+  "#480CA8", // 5- bottom
   "#6930C3", // 6
   "#5E60CE", // 7
   "#5390D9", // 8
-  "#4EA8DE", // 9+ (top, lightest)
+  "#4EA8DE", // 9+ top
 ];
 
 // Blue → purple gradient for wake-ups
 const WAKEUP_COLORS = [
-  "#480CA8", // 4 (bottom, darkest purple)
+  "#480CA8", // 4+ bottom
   "#6930C3", // 3
   "#5E60CE", // 2
   "#5390D9", // 1
-  "#4EA8DE", // 0 (top, sky blue)
+  "#4EA8DE", // 0 top
 ];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+type SleepEntry = {
+  date: string;
+  hoursValue: number;
+  hoursLabel: string;
+  wakeUpsValue: number;
+  wakeUpsLabel: string;
+  createdAt: string;
+};
 
 interface ScaleProps {
   levels: { label: string; value: number }[];
@@ -58,7 +74,16 @@ interface ScaleProps {
   palette: ReturnType<typeof buildPalette>;
 }
 
-// ─── Palette builder (mirrors OverviewScreen) ─────────────────────────────────
+// ─── Utils ────────────────────────────────────────────────────────────────────
+
+const fmtISO = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+// ─── Palette builder ──────────────────────────────────────────────────────────
 
 function buildPalette(colorScheme: "light" | "dark", textColor: string) {
   if (colorScheme === "dark") {
@@ -72,6 +97,7 @@ function buildPalette(colorScheme: "light" | "dark", textColor: string) {
       segmentEmpty: "#2a2a2a",
     };
   }
+
   return {
     cardBg: "#ffffff",
     cardBorder: "#e6e6e6",
@@ -85,7 +111,14 @@ function buildPalette(colorScheme: "light" | "dark", textColor: string) {
 
 // ─── Interactive Scale Component ──────────────────────────────────────────────
 
-function InteractiveScale({ levels, colors, selectedValue, onValueChange, title, palette }: ScaleProps) {
+function InteractiveScale({
+  levels,
+  colors,
+  selectedValue,
+  onValueChange,
+  title,
+  palette,
+}: ScaleProps) {
   const containerRef = useRef<View>(null);
   const containerY = useRef(0);
   const containerHeight = useRef(0);
@@ -93,6 +126,7 @@ function InteractiveScale({ levels, colors, selectedValue, onValueChange, title,
 
   const onLayout = (e: any) => {
     containerHeight.current = e.nativeEvent.layout.height;
+
     containerRef.current?.measure((_fx, _fy, _w, h, _px, py) => {
       containerY.current = py;
       containerHeight.current = h;
@@ -103,6 +137,7 @@ function InteractiveScale({ levels, colors, selectedValue, onValueChange, title,
     const segH = containerHeight.current / SEGMENT_COUNT;
     const idx = Math.floor(touchY / segH);
     const clamped = Math.max(0, Math.min(SEGMENT_COUNT - 1, idx));
+
     return SEGMENT_COUNT - clamped;
   };
 
@@ -114,6 +149,7 @@ function InteractiveScale({ levels, colors, selectedValue, onValueChange, title,
         containerRef.current?.measure((_fx, _fy, _w, h, _px, py) => {
           containerY.current = py;
           containerHeight.current = h;
+
           const localY = evt.nativeEvent.pageY - py;
           onValueChange(yToValue(localY));
         });
@@ -126,24 +162,29 @@ function InteractiveScale({ levels, colors, selectedValue, onValueChange, title,
   ).current;
 
   return (
-    <View style={[
-      styles.card,
-      { backgroundColor: palette.cardBg, borderColor: palette.cardBorder },
-    ]}>
-      {/* top hairline matching overview cards */}
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: palette.cardBg, borderColor: palette.cardBorder },
+      ]}
+    >
       <View style={[styles.topHairline, { backgroundColor: palette.topHairline }]} />
-      <Text style={[styles.cardTitle, { color: palette.textSecondary }]}>{title}</Text>
+
+      <Text style={[styles.cardTitle, { color: palette.textSecondary }]}>
+        {title}
+      </Text>
+
       <View style={styles.scaleRow}>
-        {/* Labels column */}
         <View style={styles.labelsCol}>
           {levels.map((level) => (
             <View key={level.value} style={styles.labelCell}>
-              <Text style={[styles.labelText, { color: palette.textSecondary }]}>{level.label}</Text>
+              <Text style={[styles.labelText, { color: palette.textSecondary }]}>
+                {level.label}
+              </Text>
             </View>
           ))}
         </View>
 
-        {/* Bar column */}
         <View
           ref={containerRef}
           style={styles.barContainer}
@@ -154,6 +195,7 @@ function InteractiveScale({ levels, colors, selectedValue, onValueChange, title,
             const segmentValue = SEGMENT_COUNT - idx;
             const filled = segmentValue <= selectedValue;
             const colorIdx = level.value - 1;
+
             return (
               <View
                 key={level.value}
@@ -178,6 +220,7 @@ function InteractiveScale({ levels, colors, selectedValue, onValueChange, title,
 export default function AddSleepScreen() {
   const [hoursValue, setHoursValue] = useState(1);
   const [wakeUpsValue, setWakeUpsValue] = useState(5);
+  const [isSaving, setIsSaving] = useState(false);
 
   const { colorScheme } = useAppTheme();
   const C = Colors[colorScheme];
@@ -187,21 +230,55 @@ export default function AddSleepScreen() {
     [colorScheme, C.text]
   );
 
-  const handleSave = () => {
-    const hoursLabel = HOURS_LEVELS.find((l) => l.value === hoursValue)?.label ?? "?";
-    const wakeLabel  = WAKEUPS_LEVELS.find((l) => l.value === wakeUpsValue)?.label ?? "?";
-    console.log(`Saved: ${hoursLabel} hours, woke up ${wakeLabel} times`);
-    // TODO: persist to your data store
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+
+      const date = fmtISO(new Date());
+
+      const hoursLabel =
+        HOURS_LEVELS.find((l) => l.value === hoursValue)?.label ?? "?";
+
+      const wakeUpsLabel =
+        WAKEUPS_LEVELS.find((l) => l.value === wakeUpsValue)?.label ?? "?";
+
+      const newEntry: SleepEntry = {
+        date,
+        hoursValue,
+        hoursLabel,
+        wakeUpsValue,
+        wakeUpsLabel,
+        createdAt: new Date().toISOString(),
+      };
+
+      const raw = await AsyncStorage.getItem(SLEEP_STORAGE_KEY);
+      const currentEntries: Record<string, SleepEntry> = raw ? JSON.parse(raw) : {};
+
+      const nextEntries = {
+        ...currentEntries,
+        [date]: newEntry,
+      };
+
+      await AsyncStorage.setItem(SLEEP_STORAGE_KEY, JSON.stringify(nextEntries));
+
+      // Reschedule the sleep notification to tomorrow now that today is tracked
+      await NotificationService.rescheduleAfterSleepTracked();
+
+      Alert.alert("Saved", "Your sleep data has been saved.");
+    } catch (error) {
+      console.error("Failed to save sleep data:", error);
+      Alert.alert("Could not save", "Your sleep data could not be saved.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
     <View style={[styles.screen, { backgroundColor: C.pagebackground }]}>
-      {/* Title — same SafeAreaView pattern as OverviewScreen */}
       <SafeAreaView edges={["top", "left", "right"]} style={styles.safeHeader}>
         <Text style={[styles.title, { color: C.text }]}>Sleep Tracker</Text>
       </SafeAreaView>
 
-      {/* Cards + button pushed to bottom */}
       <View style={styles.bottomContent}>
         <View style={styles.cardsRow}>
           <InteractiveScale
@@ -212,6 +289,7 @@ export default function AddSleepScreen() {
             onValueChange={setHoursValue}
             palette={palette}
           />
+
           <InteractiveScale
             title="How many times did you wake up?"
             levels={WAKEUPS_LEVELS}
@@ -222,8 +300,13 @@ export default function AddSleepScreen() {
           />
         </View>
 
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave} activeOpacity={0.85}>
-          <Text style={styles.saveText}>save</Text>
+        <TouchableOpacity
+          style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+          onPress={handleSave}
+          activeOpacity={0.85}
+          disabled={isSaving}
+        >
+          <Text style={styles.saveText}>{isSaving ? "saving..." : "save"}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -326,6 +409,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 10,
     elevation: 5,
+  },
+  saveButtonDisabled: {
+    opacity: 0.65,
   },
   saveText: {
     color: "#FFFFFF",
