@@ -30,6 +30,11 @@
     - Mood Average statistic  
     - Sleep Tracker  
     - Customizable color theme  
+
+🔨 CURRENT FEATURE I'M WORKING ON  
+    - Sleep Tracker where you can log the amount of hours slept and the number of times you woke up in the last night  
+    - Additional statistics: Mood average, Hours slept average, Times woken up average  
+    
   
 ⚒️ UPCOMING PATCHES  
   
