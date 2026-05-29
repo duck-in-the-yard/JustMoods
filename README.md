@@ -34,6 +34,7 @@
 🔨 CURRENT FEATURE I'M WORKING ON  
     - Sleep Tracker where you can log the amount of hours slept and the number of times you woke up in the last night  
     - Additional statistics: Mood average, Hours slept average, Times woken up average  
+    - Notification everyday at 7 AM to remind you to track your sleep
     
   
 ⚒️ UPCOMING PATCHES  
