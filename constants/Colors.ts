@@ -10,6 +10,8 @@ export default {
     tabIconDefault: '#9aa0a6',
     tabIconSelected: '#33c558',
     green: '#36c15c',
+    sleepIcon: '#5390D9',
+    sleepIconSelected: '#5390D9'
   },
   dark: {
     text: '#f1f1f1',
@@ -19,5 +21,8 @@ export default {
     tabIconDefault: '#9aa0a6',
     tabIconSelected: '#33c558',
     green: '#36c15c',
+    sleepIcon: '#5390D9',
+    sleepIconSelected: '#5390D9'
+
   },
 };
