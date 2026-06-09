@@ -29,8 +29,11 @@
     - Edit tasks and create your own  
     - Customizable color theme  
 
+🚨 INFORMATION  
+    If you have problems with notifications not showing up, try allowing full battery access or allow the app to keep running in the background. This normally should take less then 1% of your battery. I'll try to find a different solution for this.  
+
 🔨 CURRENT FEATURE I'M WORKING ON  
     
 ⚒️ UPCOMING PATCHES  
-  
+    - Notification issue
 ⚒️ Current version 1.1.0
