@@ -35,5 +35,6 @@
 🔨 CURRENT FEATURE I'M WORKING ON  
     
 ⚒️ UPCOMING PATCHES  
-    - Notification issue
+    - Notification issue  
+    
 ⚒️ Current version 1.1.0
