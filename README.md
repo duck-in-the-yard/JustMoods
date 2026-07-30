@@ -33,7 +33,8 @@
     If you have problems with notifications not showing up, try allowing full battery access or allow the app to keep running in the background. This normally should take less then 1% of your battery. I'll try to find a different solution for this.  
 
 🔨 CURRENT FEATURE I'M WORKING ON  
-    Development paused at the moment
+    - Development paused at the moment  
+    
 ⚒️ UPCOMING PATCHES  
     - Notification issue  
     
